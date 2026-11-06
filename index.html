@@ -21,6 +21,10 @@
   socket.on("StartGame",(msg)=>{
     document.getElementById("startgame").remove()
   });
+  socket.on("tick",(msg)=>{
+    Remaining.textContent=msg+"";
+    Elapsed.textContent=(120-msg)+"";
+  });
 </script>
   </body>
 </html>

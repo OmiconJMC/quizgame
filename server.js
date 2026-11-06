@@ -21,9 +21,10 @@ server.listen(2763, () => {
 io.on('connection', (socket) => {
   socket.on('serverstart', (msg) => {
     console.log('GameStart');
-    socket.emit("StartGame",'');
+    io.emit("StartGame",'');
     setInterval(() => {
       console.log("tick");
+      io.emit("tick",60);
     }, 1000);
   });
 });
