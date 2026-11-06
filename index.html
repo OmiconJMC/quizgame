@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <title>Quiz Game</title>
+    <link href="">
+  </head>
+  <body>
+    <h2 id="Rem">Remaining</h2>
+    <h2 id="Ela">Elapsed</h2>
+    <button id="startgame" onclick="broadcaststart()">Start</button>
+    <script src="/socket.io/socket.io.js"></script>
+<script>
+  const socket = io();
+  const Remaining=document.getElementById("Rem");
+  const Elapsed=document.getElementById("Ela");
+
+  function broadcaststart(){
+    socket.emit("serverstart",'');
+  }
+  socket.on("StartGame",(msg)=>{
+    document.getElementById("startgame").remove()
+  });
+</script>
+  </body>
+</html>
