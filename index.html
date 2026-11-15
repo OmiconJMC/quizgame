@@ -3,27 +3,85 @@
   <head>
     <meta name="viewport" content="width=device-width,initial-scale=1.0">
     <title>Quiz Game</title>
-    <link href="">
+    
   </head>
-  <body>
-    <h2 id="Rem">Remaining</h2>
-    <h2 id="Ela">Elapsed</h2>
+  <body style="text-align: center;color:cornflowerblue;background-color: rgb(103, 0, 103);font-family: Arial, Helvetica, sans-serif;">
+    <input id="Username" value="Username Here" type="text">
+    <button id="SubmitUN" onclick="SubmitUN()">Submit</button>
+    <h2 id="Rem"></h2>
+    <h2 id="Ela"></h2>
     <button id="startgame" onclick="broadcaststart()">Start</button>
+    
     <script src="/socket.io/socket.io.js"></script>
 <script>
   const socket = io();
   const Remaining=document.getElementById("Rem");
   const Elapsed=document.getElementById("Ela");
-
+  var answer="";
+  var dead=false;
+  function SubmitUN(){
+    socket.emit("UN",document.getElementById("Username").value);
+    document.getElementById("Username").remove();
+    document.getElementById("SubmitUN").remove();
+  }
   function broadcaststart(){
     socket.emit("serverstart",'');
   }
   socket.on("StartGame",(msg)=>{
-    document.getElementById("startgame").remove()
+    document.getElementById("startgame").remove();
+    Remaining.textContent="30";
+    Elapsed.textContent="30";
   });
+  function flip(){
+    if(document.getElementById("Answerinput").value==answer){
+      socket.emit('flip','');
+      document.getElementById("Submitbtn").remove();
+      document.getElementById("Promptext").remove();
+      document.getElementById("Answerinput").remove();
+    }
+  }
+  function myturn(prompt,ans){
+    if(dead==false){
+      const newbutton=document.createElement('button');
+    const promptext=document.createElement('h2');
+    const inputfield=document.createElement("input");
+    newbutton.textContent="Submit";
+    newbutton.addEventListener("click",flip);
+    newbutton.id="Submitbtn";
+    promptext.textContent=prompt;
+    promptext.id="Promptext";
+    inputfield.type="text";
+    inputfield.id="Answerinput";
+    document.body.appendChild(promptext);
+    document.body.appendChild(newbutton);
+    document.body.appendChild(inputfield);
+    answer=ans;
+    }
+    else{
+      socket.emit('deadflip','');
+    }
+    
+  }
   socket.on("tick",(msg)=>{
     Remaining.textContent=msg+"";
-    Elapsed.textContent=(120-msg)+"";
+    Elapsed.textContent=(60-msg)+"";
+  });
+  socket.on("turn",(msg)=>{
+    const msgdata=msg.split(";;");
+    myturn(msgdata[0],msgdata[1]);
+  });
+  socket.on("die",(msg)=>{
+    dead=true;
+  });
+  socket.on("endgame",(msg)=>{
+    Remaining.remove();
+    Elapsed.remove();
+    document.getElementById("Submitbtn").remove();
+    document.getElementById("Promptext").remove();
+    document.getElementById("Answerinput").remove();
+    const endgametext=document.createElement("h1");
+    endgametext.textContent=msg;
+    document.body.appendChild(endgametext);
   });
 </script>
   </body>
