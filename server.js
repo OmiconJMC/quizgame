@@ -22,14 +22,20 @@ app.get('/', (req, res) => {
   res.sendFile(join(__dirname, 'index.html'));
 });
 
+function sendplayers(){
+  io.emit("Usernamelist",[turn%playerlist.length,...Object.values(UNDB)]);
+  console.log("sending names");
+}
 
 io.on('connection', (socket) => {
   console.log('Player Connected');
   playerlist.push(socket);
   UNDB[socket.id]="Player-"+socket.id;
+  sendplayers();
   socket.on('disconnect',(reason)=>{
     playerlist=playerlist.filter(p=>p.id!==socket.id);
-  console.log(playerlist.length);
+    delete UNDB[socket.id];
+    console.log(playerlist.length);
   });
 });
 
@@ -39,6 +45,7 @@ server.listen(2763, () => {
 io.on('connection', (socket) => {
   socket.on("UN",(msg)=>{
     UNDB[socket.id]=msg;
+    sendplayers();
   });
   socket.on('serverstart', (msg) => {
     console.log('GameStart');
@@ -51,6 +58,7 @@ io.on('connection', (socket) => {
       if(timer==0){
          timer=30;
          turn++;
+         sendplayers();
          senddeath();
       }
       if(playerlist.length==1){
@@ -68,11 +76,13 @@ io.on('connection', (socket) => {
     turn++;
     sendturn();
     io.emit("tick",timer);
+    sendplayers();
   });
   socket.on('deadflip',(msg)=>{
     turn++;
     sendturn();
     io.emit("tick",timer);
+    sendplayers();
   });
 });
 async function sendturn(){
@@ -82,5 +92,7 @@ async function sendturn(){
 }
 async function senddeath(){
   const player=playerlist[turn%playerlist.length];
+  playerlist=playerlist.filter(p=>p!==player);
+  delete UNDB[player.id];
   player.emit("die",'');
 }
